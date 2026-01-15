@@ -227,12 +227,11 @@ if __name__ == "__main__":
                     card = deck.draw_card()
                     if card:
                         # Calculate end position for the card
-                        card_x = 50 + len(player_cards) * 70
+                        card_x = 50 + (len(player_cards) + len(animated_cards)) * 70
                         card_y = 200
                         # Create animation
                         anim = AnimatedCard(card, DECK_X, DECK_Y, card_x, card_y, duration=30)
                         animated_cards.append(anim)
-                        player_cards.append(card)
                         message = f"You drew: {card}"
                     else:
                         message = "No cards left in deck!"
@@ -250,6 +249,8 @@ if __name__ == "__main__":
         for anim in animated_cards[:]:
             anim.update()
             if anim.is_complete():
+                # Add card to player cards only when animation is done
+                player_cards.append(anim.card)
                 animated_cards.remove(anim)
         
         # Update button hover states
