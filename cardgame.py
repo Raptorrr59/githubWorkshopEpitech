@@ -120,6 +120,8 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
     
     # Colors
+    GREEN = (34, 139, 34)
+    DARK_GREEN = (0, 100, 0)
     BLUE = (30, 60, 130)
     WHITE = (255, 255, 255)
     BLACK = (0, 0, 0)
@@ -283,7 +285,7 @@ if __name__ == "__main__":
             message_timer -= 1
         
         # Draw everything
-        screen.fill(BLUE)
+        screen.fill(GREEN)
         
         # Title
         title = font_large.render("Card Game", True, WHITE)
@@ -294,7 +296,7 @@ if __name__ == "__main__":
         screen.blit(deck_text, (DECK_X - 20, DECK_Y + CARD_HEIGHT + 10))
         
         # Draw deck visual
-        draw_card_visual(screen, DECK_X, DECK_Y)
+        draw_card_visual(screen, DECK_X, DECK_Y, card=None, flip_angle=180)
         
         # Draw deck shadow for 3D effect
         for i in range(1, 4):
