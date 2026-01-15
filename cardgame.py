@@ -186,6 +186,8 @@ if __name__ == "__main__":
     running = True
     message = "Welcome to Card Game! Click 'Draw Card' to begin."
     message_timer = 0
+    shuffling = False
+    shuffle_time = 0
     
     def draw_card_visual(surface, x, y, card=None, flip_angle=0):
         """Draw a card at the given position with optional flip animation."""
@@ -271,6 +273,8 @@ if __name__ == "__main__":
                     message_timer = 120
                 elif reshuffle_button.is_clicked(mouse_pos):
                     # Animate all player cards back to the deck
+                    shuffling = True
+                    shuffle_time = 0
                     for i, card in enumerate(player_cards):
                         card_x = 50 + i * 70
                         card_y = 200
@@ -285,6 +289,8 @@ if __name__ == "__main__":
         # Update animations
         for anim in animated_cards[:]:
             anim.update()
+            if anim.to_deck:
+                shuffle_time += 1
             if anim.is_complete():
                 if anim.to_deck:
                     # Card animation returning to deck is complete
@@ -292,6 +298,7 @@ if __name__ == "__main__":
                     if all(a.is_complete() for a in animated_cards):
                         # All cards returned, reset deck
                         deck.reset()
+                        shuffling = False
                         message = "Deck reshuffled! Cards returned to deck."
                         message_timer = 120
                 else:
@@ -319,12 +326,39 @@ if __name__ == "__main__":
         deck_text = font_small.render(f"Deck: {deck.cards_remaining()}", True, WHITE)
         screen.blit(deck_text, (DECK_X - 20, DECK_Y + CARD_HEIGHT + 10))
         
+        # Calculate shake offset when shuffling
+        shake_offset_x = 0
+        shake_offset_y = 0
+        if shuffling and animated_cards:
+            # Shake the deck based on shuffle time
+            shake_offset_x = int(math.sin(shuffle_time * 0.3) * 4)
+            shake_offset_y = int(math.cos(shuffle_time * 0.3) * 4)
+        
         # Draw deck visual
-        draw_card_visual(screen, DECK_X, DECK_Y, card=None, flip_angle=180)
+        deck_x_offset = DECK_X + shake_offset_x
+        deck_y_offset = DECK_Y + shake_offset_y
+        draw_card_visual(screen, deck_x_offset, deck_y_offset, card=None, flip_angle=180)
+        
+        # Draw spinning cards inside deck during shuffle
+        if shuffling and animated_cards:
+            for i in range(3):
+                spin_angle = (shuffle_time * (i + 1) * 5) % 360
+                spin_x = deck_x_offset + CARD_WIDTH // 2 + int(math.cos(spin_angle * math.pi / 180) * 8)
+                spin_y = deck_y_offset + CARD_HEIGHT // 2 + int(math.sin(spin_angle * math.pi / 180) * 8)
+                
+                # Create a temporary surface for the spinning card
+                temp_surface = pygame.Surface((CARD_WIDTH // 2, CARD_HEIGHT // 2), pygame.SRCALPHA)
+                pygame.draw.rect(temp_surface, (100, 150, 200, 150), temp_surface.get_rect())
+                pygame.draw.rect(temp_surface, LIGHT_BLUE, temp_surface.get_rect(), 1)
+                
+                # Rotate the card
+                rotated = pygame.transform.rotate(temp_surface, spin_angle)
+                rotated_rect = rotated.get_rect(center=(spin_x, spin_y))
+                screen.blit(rotated, rotated_rect)
         
         # Draw deck shadow for 3D effect
         for i in range(1, 4):
-            pygame.draw.rect(screen, BLACK, (DECK_X + i, DECK_Y + i, CARD_WIDTH, CARD_HEIGHT), 1)
+            pygame.draw.rect(screen, BLACK, (deck_x_offset + i, deck_y_offset + i, CARD_WIDTH, CARD_HEIGHT), 1)
         
         # Player cards
         player_text = font_small.render(f"Your cards ({len(player_cards)}):", True, WHITE)
