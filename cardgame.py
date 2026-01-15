@@ -124,8 +124,8 @@ if __name__ == "__main__":
     pygame.init()
     
     # Screen setup
-    SCREEN_WIDTH = 1000
-    SCREEN_HEIGHT = 700
+    SCREEN_WIDTH = 1920
+    SCREEN_HEIGHT = 1080
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Card Game")
     clock = pygame.time.Clock()
@@ -178,9 +178,9 @@ if __name__ == "__main__":
             self.hovered = self.rect.collidepoint(pos)
     
     # Create buttons
-    draw_button = Button(50, 600, 150, 60, "Draw Card")
-    reshuffle_button = Button(250, 600, 150, 60, "Reshuffle")
-    quit_button = Button(800, 600, 150, 60, "Quit")
+    draw_button = Button(50, SCREEN_HEIGHT - 160, 150, 60, "Draw Card")
+    reshuffle_button = Button(250, SCREEN_HEIGHT - 160, 150, 60, "Reshuffle")
+    quit_button = Button(800, SCREEN_HEIGHT - 160, 150, 60, "Quit")
     
     # Main game loop
     running = True
@@ -366,19 +366,40 @@ if __name__ == "__main__":
         
         # Display player cards in a row
         card_x = 50
+        card_y = 200
         for i, card in enumerate(player_cards):
-            draw_card_visual(screen, card_x, 200, card)
+            draw_card_visual(screen, card_x, card_y, card)
             card_x += 70
+            # Responsive to pass to next line
+            if card_x >= SCREEN_WIDTH - 60:
+                card_x = 50
+                card_y += 100
         
         # Draw animated cards
         for anim in animated_cards:
             x, y = anim.get_position()
             draw_card_visual(screen, x, y, anim.card, anim.flip_angle)
         
+            # Draw card background
+            card_rect = pygame.Rect(card_x, card_y, 60, 90)
+            pygame.draw.rect(screen, WHITE, card_rect)
+            pygame.draw.rect(screen, BLACK, card_rect, 2)
+            
+            # Determine card color based on suit
+            if card.suit in [Suit.HEARTS, Suit.DIAMONDS]:
+                card_color = RED
+            else:
+                card_color = BLACK
+            
+            # Draw card text with Unicode support and appropriate color
+            card_text = font_card.render(str(card), True, card_color)
+            text_rect = card_text.get_rect(center=card_rect.center)
+            screen.blit(card_text, text_rect)
+
         # Message display
         if message_timer > 0:
             msg_surface = font_small.render(message, True, WHITE)
-            screen.blit(msg_surface, (50, 350))
+            screen.blit(msg_surface, (50, card_y + 100))
         
         # Draw buttons
         draw_button.draw(screen)
