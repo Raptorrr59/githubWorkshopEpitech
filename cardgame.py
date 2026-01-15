@@ -86,13 +86,13 @@ class AnimatedCard:
         self.end_y = end_y
         self.duration = duration
         self.elapsed = 0
-        self.flip_angle = 0
+        self.flip_angle = 180
     
     def update(self):
         """Update animation progress."""
         self.elapsed += 1
-        # Flip effect: rotate 180 degrees over animation duration
-        self.flip_angle = (self.elapsed / self.duration) * 180
+        # Flip effect: start at 180 degrees (back), flip to 0 degrees (front)
+        self.flip_angle = 180 - (self.elapsed / self.duration) * 180
     
     def is_complete(self):
         """Check if animation is complete."""
@@ -120,12 +120,12 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
     
     # Colors
-    GREEN = (34, 139, 34)
+    BLUE = (30, 60, 130)
     WHITE = (255, 255, 255)
     BLACK = (0, 0, 0)
     RED = (220, 20, 60)
-    GRAY = (200, 200, 200)
-    DARK_GREEN = (25, 100, 25)
+    DARK_BLUE = (20, 40, 100)
+    LIGHT_BLUE = (100, 150, 200)
     
     # Fonts - use system font for Unicode support
     font_large = pygame.font.SysFont('dejavusans,freesans,liberationsans,arial', 48)
@@ -182,8 +182,28 @@ if __name__ == "__main__":
         card_surface = pygame.Surface((CARD_WIDTH, CARD_HEIGHT))
         
         if flip_angle > 90:
-            # Back of card (show green)
-            card_surface.fill(DARK_GREEN)
+            # Back of card - draw decorative pattern
+            card_surface.fill(DARK_BLUE)
+            
+            # Draw border
+            pygame.draw.rect(card_surface, LIGHT_BLUE, card_surface.get_rect(), 2)
+            
+            # Draw decorative diamond pattern
+            diamond_size = 8
+            for row in range(0, CARD_HEIGHT + diamond_size, diamond_size * 2):
+                for col in range(0, CARD_WIDTH + diamond_size, diamond_size * 2):
+                    # Calculate points for a diamond shape
+                    points = [
+                        (col + diamond_size // 2, row),
+                        (col + diamond_size, row + diamond_size // 2),
+                        (col + diamond_size // 2, row + diamond_size),
+                        (col, row + diamond_size // 2)
+                    ]
+                    pygame.draw.polygon(card_surface, (80, 120, 180), points, 1)
+            
+            # Draw center design
+            center_x, center_y = CARD_WIDTH // 2, CARD_HEIGHT // 2
+            pygame.draw.circle(card_surface, (100, 150, 200), (center_x, center_y), 8, 2)
         else:
             # Front of card
             card_surface.fill(WHITE)
@@ -263,7 +283,7 @@ if __name__ == "__main__":
             message_timer -= 1
         
         # Draw everything
-        screen.fill(GREEN)
+        screen.fill(BLUE)
         
         # Title
         title = font_large.render("Card Game", True, WHITE)
