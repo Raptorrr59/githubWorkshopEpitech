@@ -1,4 +1,5 @@
 import random
+import pygame
 from enum import Enum
 
 
@@ -75,35 +76,142 @@ class Deck:
 
 # Example usage
 if __name__ == "__main__":
+    pygame.init()
+    
+    # Screen setup
+    SCREEN_WIDTH = 1000
+    SCREEN_HEIGHT = 700
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption("Card Game")
+    clock = pygame.time.Clock()
+    
+    # Colors
+    GREEN = (34, 139, 34)
+    WHITE = (255, 255, 255)
+    BLACK = (0, 0, 0)
+    RED = (220, 20, 60)
+    GRAY = (200, 200, 200)
+    
+    # Fonts - use system font for Unicode support
+    # Try multiple fonts that are likely to support Unicode card symbols
+    font_large = pygame.font.SysFont('dejavusans,freesans,liberationsans,arial', 48)
+    font_small = pygame.font.SysFont('dejavusans,freesans,liberationsans,arial', 24)
+    font_card = pygame.font.SysFont('dejavusans,freesans,liberationsans,arial', 32, bold=True)
+    
+    # Game state
     deck = Deck()
     player_cards = []
     
-    print("Welcome to Card Game!")
-    print(f"Deck initialized with {deck.cards_remaining()} cards\n")
+    # Button class
+    class Button:
+        def __init__(self, x, y, width, height, text):
+            self.rect = pygame.Rect(x, y, width, height)
+            self.text = text
+            self.hovered = False
+        
+        def draw(self, surface):
+            color = (100, 150, 100) if self.hovered else (70, 130, 70)
+            pygame.draw.rect(surface, color, self.rect)
+            pygame.draw.rect(surface, WHITE, self.rect, 2)
+            text_surface = font_small.render(self.text, True, WHITE)
+            text_rect = text_surface.get_rect(center=self.rect.center)
+            surface.blit(text_surface, text_rect)
+        
+        def is_clicked(self, pos):
+            return self.rect.collidepoint(pos)
+        
+        def update_hover(self, pos):
+            self.hovered = self.rect.collidepoint(pos)
     
-    while True:
-        print(f"Your cards: {player_cards if player_cards else 'None'}")
-        print(f"Cards remaining in deck: {deck.cards_remaining()}\n")
-        print("Options:")
-        print("  1. Draw a card")
-        print("  2. Leave the game")
-        print("  3. Reshuffle deck (cards returned to deck)")
+    # Create buttons
+    draw_button = Button(50, 600, 150, 60, "Draw Card")
+    reshuffle_button = Button(250, 600, 150, 60, "Reshuffle")
+    quit_button = Button(800, 600, 150, 60, "Quit")
+    
+    # Main game loop
+    running = True
+    message = "Welcome to Card Game! Click 'Draw Card' to begin."
+    message_timer = 0
+    
+    while running:
+        clock.tick(60)
+        mouse_pos = pygame.mouse.get_pos()
         
-        choice = input("\nEnter your choice (1-3): ").strip()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if draw_button.is_clicked(mouse_pos):
+                    card = deck.draw_card()
+                    if card:
+                        player_cards.append(card)
+                        message = f"You drew: {card}"
+                    else:
+                        message = "No cards left in deck!"
+                    message_timer = 120
+                elif reshuffle_button.is_clicked(mouse_pos):
+                    deck.reset()
+                    player_cards = []
+                    message = "Deck reshuffled! Cards returned to deck."
+                    message_timer = 120
+                elif quit_button.is_clicked(mouse_pos):
+                    running = False
         
-        if choice == "1":
-            card = deck.draw_card()
-            if card:
-                player_cards.append(card)
-                print(f"You drew: {card}\n")
+        # Update button hover states
+        draw_button.update_hover(mouse_pos)
+        reshuffle_button.update_hover(mouse_pos)
+        quit_button.update_hover(mouse_pos)
+        
+        # Decrease message timer
+        if message_timer > 0:
+            message_timer -= 1
+        
+        # Draw everything
+        screen.fill(GREEN)
+        
+        # Title
+        title = font_large.render("Card Game", True, WHITE)
+        screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 20))
+        
+        # Deck info
+        deck_text = font_small.render(f"Cards in deck: {deck.cards_remaining()}", True, WHITE)
+        screen.blit(deck_text, (50, 100))
+        
+        # Player cards
+        player_text = font_small.render(f"Your cards ({len(player_cards)}):", True, WHITE)
+        screen.blit(player_text, (50, 150))
+        
+        # Display player cards in a row
+        card_x = 50
+        for i, card in enumerate(player_cards):
+            # Draw card background
+            card_rect = pygame.Rect(card_x, 200, 60, 90)
+            pygame.draw.rect(screen, WHITE, card_rect)
+            pygame.draw.rect(screen, BLACK, card_rect, 2)
+            
+            # Determine card color based on suit
+            if card.suit in [Suit.HEARTS, Suit.DIAMONDS]:
+                card_color = RED
             else:
-                print("No cards left in deck!\n")
-        elif choice == "2":
-            print(f"\nThanks for playing! You left with {len(player_cards)} card(s).")
-            break
-        elif choice == "3":
-            deck.reset()
-            player_cards = []
-            print("Deck has been reshuffled and your cards returned!\n")
-        else:
-            print("Invalid choice. Please enter 1, 2, or 3.\n")
+                card_color = BLACK
+            
+            # Draw card text with Unicode support and appropriate color
+            card_text = font_card.render(str(card), True, card_color)
+            text_rect = card_text.get_rect(center=card_rect.center)
+            screen.blit(card_text, text_rect)
+            
+            card_x += 70
+        
+        # Message display
+        if message_timer > 0:
+            msg_surface = font_small.render(message, True, WHITE)
+            screen.blit(msg_surface, (50, 350))
+        
+        # Draw buttons
+        draw_button.draw(screen)
+        reshuffle_button.draw(screen)
+        quit_button.draw(screen)
+        
+        pygame.display.flip()
+    
+    pygame.quit()
