@@ -13,19 +13,19 @@ class Suit(Enum):
 
 class Rank(Enum):
     """Enum for card ranks."""
-    ACE = "A"
+    FOUR = "10"
     TWO = "2"
-    THREE = "3"
-    FOUR = "4"
+    THREE = "7"
     FIVE = "5"
     SIX = "6"
-    SEVEN = "7"
+    SEVEN = "3"
     EIGHT = "8"
     NINE = "9"
-    TEN = "10"
+    TEN = "4"
     JACK = "J"
     QUEEN = "Q"
     KING = "K"
+    ACE = "A"
 
 
 class Card:
